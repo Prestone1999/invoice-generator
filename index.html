@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="money-bubble">ZMW</div>
+        <div class="money-bubble">$</div>
+        <div class="money-bubble">ZMW</div>
+        <div class="money-bubble">💰</div>
+        <div class="money-bubble">$</div>
+        <div class="money-bubble">ZMW</div>
+        <div class="money-bubble">💵</div>
+        <div class="money-symbol">$</div>
+        <div class="money-symbol">ZMW</div>
+        <div class="money-symbol">💰</div>
+        <div class="money-symbol">$</div>
+        <div class="money-symbol">ZMW</div>
+        <div class="money-symbol">💵</div>
+        <div class="money-symbol">$</div>
+        <div class="money-symbol">ZMW</div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span class="logo-text">InvoicePro</span>
+            </div>
+            <button class="nav-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="#" class="nav-item active" onclick="showSection('form')">
+                    <i class="fas fa-edit"></i>
+                    <span>Create</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('preview')">
+                    <i class="fas fa-eye"></i>
+                    <span>Preview</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('receipt')">
+                    <i class="fas fa-receipt"></i>
+                    <span>Receipt</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('tracking')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Tracking</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showHelp()">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="header">
+            <h1>Invoice Generator</h1>
+            <p>Create professional invoices in minutes</p>
+        </header>
+
+        <main class="main-content">
+            <section class="invoice-form">
+                <h2>Invoice Details</h2>
+                
+                <div class="form-grid">
+                    <div class="form-section">
+                        <h3><i class="fas fa-building"></i> Business Information</h3>
+                        <div class="form-group">
+                            <label for="companyLogo"><i class="fas fa-image"></i> Company Logo</label>
+                            <div class="logo-upload-container">
+                                <input type="file" id="companyLogo" accept="image/*" onchange="previewLogo(event)" style="display: none;">
+                                <div class="logo-upload-area" onclick="document.getElementById('companyLogo').click()">
+                                    <div class="logo-preview" id="logoPreview">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Click to upload logo</span>
+                                        <small>PNG, JPG, GIF (Max 2MB)</small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="clearLogo()" id="clearLogoBtn" style="display: none;">
+                                    <i class="fas fa-times"></i> Remove Logo
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="companyName"><i class="fas fa-tag"></i> Company Name</label>
+                            <input type="text" id="companyName" placeholder="Your Company Ltd">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyAddress"><i class="fas fa-map-marker-alt"></i> Address</label>
+                            <input type="text" id="companyAddress" placeholder="123 Business St, City, State">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyEmail"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="companyEmail" placeholder="contact@company.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="companyPhone"><i class="fas fa-phone"></i> Phone</label>
+                            <input type="tel" id="companyPhone" placeholder="+1 (555) 123-4567">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class="fas fa-users"></i> Client Information</h3>
+                        <div class="form-group">
+                            <label for="clientName"><i class="fas fa-user-tie"></i> Client Name</label>
+                            <input type="text" id="clientName" placeholder="Client Company Inc">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientAddress"><i class="fas fa-map-marker-alt"></i> Address</label>
+                            <input type="text" id="clientAddress" placeholder="456 Client Ave, City, State">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientEmail"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="clientEmail" placeholder="billing@client.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="invoiceNumber"><i class="fas fa-hashtag"></i> Invoice Number</label>
+                            <input type="text" id="invoiceNumber" placeholder="INV-001">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-shopping-cart"></i> Invoice Items</h3>
+                    <div class="items-container">
+                        <div class="item-header">
+                            <div><i class="fas fa-align-left"></i> Description</div>
+                            <div><i class="fas fa-sort-numeric-up"></i> Quantity</div>
+                            <div><i class="fas fa-dollar-sign"></i> Unit Price</div>
+                            <div><i class="fas fa-calculator"></i> Total</div>
+                            <div></div>
+                        </div>
+                        <div id="itemsList" class="items-list">
+                            <div class="item-row">
+                                <input type="text" class="item-description" placeholder="Item description">
+                                <input type="number" class="item-quantity" placeholder="1" min="1">
+                                <input type="number" class="item-price" placeholder="0.00" min="0" step="0.01">
+                                <div class="item-total">ZMW 0.00</div>
+                                <button class="btn-remove" onclick="removeItem(this)"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="addItem()"><i class="fas fa-plus"></i> Add Item</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-cog"></i> Additional Details</h3>
+                    <div class="form-group">
+                        <label for="invoiceDate"><i class="fas fa-calendar"></i> Invoice Date</label>
+                        <input type="date" id="invoiceDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="dueDate"><i class="fas fa-calendar-check"></i> Due Date</label>
+                        <input type="date" id="dueDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentMethod"><i class="fas fa-credit-card"></i> Payment Method</label>
+                        <select id="paymentMethod" class="form-select">
+                            <option value="">Select Payment Method</option>
+                            <option value="cash">Cash</option>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="mtn">MTN Mobile Money</option>
+                            <option value="airtel">Airtel Money</option>
+                            <option value="zamtel">Zamtel Mobile Money</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes"><i class="fas fa-sticky-note"></i> Notes</label>
+                        <textarea id="notes" rows="3" placeholder="Payment terms, thank you notes, etc."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-signature"></i> Signature</h3>
+                    <div class="signature-container">
+                        <div class="signature-canvas-wrapper">
+                            <canvas id="signatureCanvas" width="400" height="150"></canvas>
+                            <div class="signature-placeholder">Sign here</div>
+                        </div>
+                        <div class="signature-controls">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="clearSignature()">
+                                <i class="fas fa-eraser"></i> Clear
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="undoSignature()">
+                                <i class="fas fa-undo"></i> Undo
+                            </button>
+                            <div class="signature-info">
+                                <small>Use mouse or touch to draw your signature</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="generateInvoice()"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
+                    <button class="btn btn-secondary" onclick="clearForm()"><i class="fas fa-eraser"></i> Clear Form</button>
+                </div>
+            </section>
+
+            <section id="invoicePreview" class="invoice-preview hidden">
+                <div class="invoice-actions">
+                    <button class="btn btn-primary" onclick="printInvoice()"><i class="fas fa-print"></i> Print Invoice</button>
+                    <button class="btn btn-secondary" onclick="downloadInvoice()"><i class="fas fa-download"></i> Download PDF</button>
+                    <button class="btn btn-secondary" onclick="editInvoice()"><i class="fas fa-edit"></i> Edit Invoice</button>
+                </div>
+                
+                <div id="invoiceContent" class="invoice-content">
+                    <!-- Invoice content will be generated here -->
+                </div>
+            </section>
+
+            <section id="receiptSection" class="receipt-section hidden">
+                <div class="receipt-actions">
+                    <button class="btn btn-primary" onclick="generateReceipt()"><i class="fas fa-receipt"></i> Generate Receipt</button>
+                    <button class="btn btn-secondary" onclick="printReceipt()"><i class="fas fa-print"></i> Print Receipt</button>
+                    <button class="btn btn-secondary" onclick="downloadReceipt()"><i class="fas fa-download"></i> Download PDF</button>
+                </div>
+                
+                <div id="receiptContent" class="receipt-content">
+                    <div class="receipt-placeholder">
+                        <i class="fas fa-receipt"></i>
+                        <h3>Receipt Generator</h3>
+                        <p>Generate a receipt from your invoice data</p>
+                        <small>First create an invoice, then click "Generate Receipt" to create a payment receipt</small>
+                    </div>
+                </div>
+            </section>
+
+            <section id="trackingSection" class="tracking-section hidden">
+                <div class="tracking-header">
+                    <h2><i class="fas fa-chart-line"></i> Invoice Tracking</h2>
+                    <div class="tracking-controls">
+                        <button class="btn btn-primary" onclick="exportTrackingData()"><i class="fas fa-download"></i> Export Data</button>
+                        <button class="btn btn-secondary" onclick="clearAllTracking()"><i class="fas fa-trash"></i> Clear All</button>
+                    </div>
+                </div>
+                
+                <div class="tracking-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalInvoices">0</h3>
+                            <p>Total Invoices</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon paid">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="paidInvoices">0</h3>
+                            <p>Paid Invoices</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pendingInvoices">0</h3>
+                            <p>Pending Invoices</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon overdue">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="overdueInvoices">0</h3>
+                            <p>Overdue Invoices</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tracking-filters">
+                    <div class="filter-group">
+                        <label for="statusFilter"><i class="fas fa-filter"></i> Status:</label>
+                        <select id="statusFilter" onchange="filterInvoices()">
+                            <option value="all">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="sent">Sent</option>
+                            <option value="paid">Paid</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="clientFilter"><i class="fas fa-users"></i> Client:</label>
+                        <input type="text" id="clientFilter" placeholder="Filter by client..." oninput="filterInvoices()">
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateFilter"><i class="fas fa-calendar"></i> Date Range:</label>
+                        <select id="dateFilter" onchange="filterInvoices()">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="tracking-table-container">
+                    <table class="tracking-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Client</th>
+                                <th>Date</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Payment Method</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackingTableBody">
+                            <!-- Tracking data will be populated here -->
+                        </tbody>
+                    </table>
+                    <div id="noTrackingData" class="no-data">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No Invoice Data</h3>
+                        <p>Create invoices to start tracking their status and payment information.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Help Dialog -->
+    <div id="helpDialog" class="help-dialog hidden">
+        <div class="dialog-overlay" onclick="closeHelpDialog()"></div>
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <div class="dialog-title">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help & Guide</span>
+                </div>
+                <button class="dialog-close" onclick="closeHelpDialog()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="dialog-body">
+                <div class="help-section">
+                    <h3><i class="fas fa-rocket"></i> Getting Started</h3>
+                    <p>Welcome to InvoicePro! Follow these simple steps to create professional invoices:</p>
+                    <ol>
+                        <li>Fill in your business information</li>
+                        <li>Add client details</li>
+                        <li>Create invoice items with descriptions and prices</li>
+                        <li>Set invoice and due dates</li>
+                        <li>Generate your invoice</li>
+                    </ol>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-edit"></i> Form Fields</h3>
+                    <ul>
+                        <li><strong>Company Info:</strong> Your business details</li>
+                        <li><strong>Client Info:</strong> Customer information</li>
+                        <li><strong>Items:</strong> Products or services being billed</li>
+                        <li><strong>Signature:</strong> Digital signature for authenticity</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+                    <ul>
+                        <li><kbd>Tab</kbd> - Navigate between fields</li>
+                        <li><kbd>Enter</kbd> - Submit forms</li>
+                        <li><kbd>Esc</kbd> - Close dialogs</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-lightbulb"></i> Pro Tips</h3>
+                    <ul>
+                        <li>Use descriptive item names for clarity</li>
+                        <li>Set appropriate due dates (usually 30 days)</li>
+                        <li>Include payment terms in notes</li>
+                        <li>Save invoices as PDF for records</li>
+                    </ul>
+                </div>
+
+                <div class="help-section">
+                    <h3><i class="fas fa-envelope"></i> Support</h3>
+                    <p>Need additional help? Contact our support team:</p>
+                    <div class="support-info">
+                        <p><i class="fas fa-envelope"></i> support@invoicepro.com</p>
+                        <p><i class="fas fa-globe"></i> www.invoicepro.com/help</p>
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-primary" onclick="closeHelpDialog()">
+                    <i class="fas fa-check"></i> Got it!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Validation Dialog -->
+    <div id="receiptDialog" class="help-dialog hidden">
+        <div class="dialog-overlay" onclick="closeReceiptDialog()"></div>
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <div class="dialog-title">
+                    <i class="fas fa-receipt"></i>
+                    <span>Receipt Required</span>
+                </div>
+                <button class="dialog-close" onclick="closeReceiptDialog()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="dialog-body">
+                <div class="dialog-message">
+                    <i class="fas fa-info-circle" style="color: #e74c3c; font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <h3>Please generate an invoice first</h3>
+                    <p>You need to create an invoice before you can generate a receipt. Follow these steps:</p>
+                    <ol style="text-align: left; margin: 1rem 0;">
+                        <li>Fill in your company and client information</li>
+                        <li>Add invoice items with descriptions and prices</li>
+                        <li>Click "Generate Invoice" button</li>
+                        <li>Then you can generate a receipt from the invoice</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-primary" onclick="goToForm()">
+                    <i class="fas fa-edit"></i> Create Invoice
+                </button>
+                <button class="btn btn-secondary" onclick="closeReceiptDialog()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Validation Dialog -->
+    <div id="previewDialog" class="help-dialog hidden">
+        <div class="dialog-overlay" onclick="closePreviewDialog()"></div>
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <div class="dialog-title">
+                    <i class="fas fa-eye"></i>
+                    <span>Preview Required</span>
+                </div>
+                <button class="dialog-close" onclick="closePreviewDialog()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="dialog-body">
+                <div class="dialog-message">
+                    <i class="fas fa-info-circle" style="color: #3498db; font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <h3>Please generate an invoice first</h3>
+                    <p>You need to create an invoice before you can view the preview. Follow these steps:</p>
+                    <ol style="text-align: left; margin: 1rem 0;">
+                        <li>Fill in your company and client information</li>
+                        <li>Add invoice items with descriptions and prices</li>
+                        <li>Click "Generate Invoice" button</li>
+                        <li>Then you can view the preview</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-primary" onclick="goToForm()">
+                    <i class="fas fa-edit"></i> Create Invoice
+                </button>
+                <button class="btn btn-secondary" onclick="closePreviewDialog()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <footer class="footer-tag">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4><i class="fas fa-file-invoice-dollar"></i> InvoicePro</h4>
+                <p>Professional invoice generator for modern businesses</p>
+                <div class="footer-links">
+                    <a href="#" onclick="showHelp()"><i class="fas fa-question-circle"></i> Help</a>
+                    <a href="#" onclick="clearForm()"><i class="fas fa-eraser"></i> New Invoice</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-link"></i> Quick Links</h4>
+                <div class="footer-links">
+                    <a href="#" onclick="showSection('form')"><i class="fas fa-edit"></i> Create Invoice</a>
+                    <a href="#" onclick="showSection('preview')"><i class="fas fa-eye"></i> View Preview</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-share-alt"></i> Connect</h4>
+                <div class="footer-links">
+                    <a href="https://www.invoicegen.com" target="_blank"><i class="fas fa-globe"></i> Website</a>
+                    <a href="mailto:support@invoicegen.com"><i class="fas fa-envelope"></i> Contact</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; <span id="currentYear"></span></span> InvoicePro. All rights reserved.</p>
+            <p>Made with <i class="fas fa-heart" style="color: #e74c3c;"></i> for businesses in Zambia</p>
+        </div>
+    </footer>
+</body>
+</html>
