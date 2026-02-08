@@ -840,95 +840,103 @@ function generateInvoiceHTML(data) {
     const total = subtotal + tax;
     
     return `
-        <div class="invoice-header">
-            <div class="company-info">
-                ${data.companyLogo ? `
-                    <div class="company-logo">
-                        <img src="${data.companyLogo}" alt="${data.companyName}" class="company-logo-img">
-                    </div>
-                ` : ''}
-                <h2>${data.companyName}</h2>
-                <p>${data.companyAddress}</p>
-                <p>${data.companyEmail}</p>
-                ${data.companyPhone ? `<p>${data.companyPhone}</p>` : ''}
-            </div>
-            <div class="invoice-title">
-                <h1>INVOICE</h1>
+        <div class="invoice-container">
+            <!-- Invoice Header -->
+            <div class="invoice-header">
+                <div class="invoice-title">
+                    <h1>INVOICE</h1>
+                </div>
                 <div class="invoice-meta">
                     <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
                     <p><strong>Date:</strong> ${formatDate(data.invoiceDate)}</p>
                     <p><strong>Due Date:</strong> ${formatDate(data.dueDate)}</p>
                 </div>
             </div>
+            
+            <!-- Company and Client Information -->
+            <div class="invoice-parties">
+                <div class="company-section">
+                    ${data.companyLogo ? `
+                        <div class="company-logo">
+                            <img src="${data.companyLogo}" alt="${data.companyName}" class="company-logo-img">
+                        </div>
+                    ` : ''}
+                    <div class="company-details">
+                        <h2>${data.companyName}</h2>
+                        <p>${data.companyAddress}</p>
+                        <p>${data.companyEmail}</p>
+                        ${data.companyPhone ? `<p>${data.companyPhone}</p>` : ''}
+                    </div>
+                </div>
+                
+                <div class="client-section">
+                    <h3>Bill To:</h3>
+                    <p><strong>${data.clientName}</strong></p>
+                    <p>${data.clientAddress}</p>
+                    ${data.clientEmail ? `<p>${data.clientEmail}</p>` : ''}
+                </div>
+            </div>
+            
+            <!-- Invoice Items Table -->
+            <div class="invoice-items">
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-right">Unit Price</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map(item => `
+                            <tr>
+                                <td>${item.description}</td>
+                                <td class="text-center">${item.quantity}</td>
+                                <td class="text-right">ZMW ${item.price.toFixed(2)}</td>
+                                <td class="text-right">ZMW ${item.total.toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Summary and Notes -->
+            <div class="invoice-footer">
+                <div class="invoice-notes-section">
+                    ${data.notes ? `
+                        <div class="invoice-notes">
+                            <h3>Notes</h3>
+                            <p>${data.notes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${data.signature ? `
+                        <div class="invoice-signature">
+                            <h4>Authorized Signature</h4>
+                            <img src="${data.signature}" alt="Signature" class="signature-display">
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="invoice-summary">
+                    <table class="summary-table">
+                        <tr>
+                            <td><strong>Subtotal:</strong></td>
+                            <td class="text-right">ZMW ${subtotal.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tax:</strong></td>
+                            <td class="text-right">ZMW ${tax.toFixed(2)}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total:</strong></td>
+                            <td class="text-right"><strong>ZMW ${total.toFixed(2)}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
-        
-        <div class="invoice-parties">
-            <div class="party-info">
-                <h3>Bill To:</h3>
-                <p><strong>${data.clientName}</strong></p>
-                <p>${data.clientAddress}</p>
-                ${data.clientEmail ? `<p>${data.clientEmail}</p>` : ''}
-            </div>
-            <div class="party-info">
-                <h3>Bill From:</h3>
-                <p><strong>${data.companyName}</strong></p>
-                <p>${data.companyAddress}</p>
-                ${data.companyEmail ? `<p>${data.companyEmail}</p>` : ''}
-                ${data.companyPhone ? `<p>${data.companyPhone}</p>` : ''}
-            </div>
-        </div>
-        
-        <table class="invoice-table">
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th class="text-right">Quantity</th>
-                    <th class="text-right">Unit Price</th>
-                    <th class="text-right">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.items.map(item => `
-                    <tr>
-                        <td>${item.description}</td>
-                        <td class="text-right">${item.quantity}</td>
-                        <td class="text-right">ZMW ${item.price.toFixed(2)}</td>
-                        <td class="text-right">ZMW ${item.total.toFixed(2)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        
-        <div class="invoice-summary">
-            <table class="summary-table">
-                <tr>
-                    <td><strong>Subtotal:</strong></td>
-                    <td class="text-right" id="subtotal">ZMW ${subtotal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                    <td><strong>Tax:</strong></td>
-                    <td class="text-right" id="tax">ZMW ${tax.toFixed(2)}</td>
-                </tr>
-                <tr class="total-row">
-                    <td><strong>Total:</strong></td>
-                    <td class="text-right" id="total">ZMW ${total.toFixed(2)}</td>
-                </tr>
-            </table>
-        </div>
-        
-        ${data.notes ? `
-            <div class="invoice-notes">
-                <h3>Notes</h3>
-                <p>${data.notes}</p>
-            </div>
-        ` : ''}
-        
-        ${data.signature ? `
-            <div class="invoice-signature">
-                <h4>Authorized Signature</h4>
-                <img src="${data.signature}" alt="Signature" class="signature-display">
-            </div>
-        ` : ''}
     `;
 }
 
@@ -983,86 +991,102 @@ function generateReceiptHTML(data) {
     };
     
     return `
-        <div class="receipt-header">
-            <div class="receipt-company">
-                ${data.companyLogo ? `
-                    <div class="company-logo">
-                        <img src="${data.companyLogo}" alt="${data.companyName}" class="company-logo-img">
-                    </div>
-                ` : ''}
-                <h2>${data.companyName}</h2>
-                <p>${data.companyAddress}</p>
-                <p>${data.companyEmail}</p>
-                ${data.companyPhone ? `<p>${data.companyPhone}</p>` : ''}
-            </div>
-            <div class="receipt-title">
-                <h1>PAYMENT RECEIPT</h1>
+        <div class="receipt-container">
+            <!-- Receipt Header -->
+            <div class="receipt-header">
+                <div class="receipt-title">
+                    <h1>PAYMENT RECEIPT</h1>
+                </div>
                 <div class="receipt-meta">
                     <p><strong>Receipt Number:</strong> ${receiptNumber}</p>
                     <p><strong>Receipt Date:</strong> ${formatDate(receiptDate)}</p>
                     <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
                 </div>
             </div>
-        </div>
-        
-        <div class="receipt-parties">
-            <div class="party-info">
-                <h3>Received From:</h3>
-                <p><strong>${data.clientName}</strong></p>
-                <p>${data.clientAddress}</p>
-                ${data.clientEmail ? `<p>${data.clientEmail}</p>` : ''}
+            
+            <!-- Company and Client Information -->
+            <div class="receipt-parties">
+                <div class="company-section">
+                    ${data.companyLogo ? `
+                        <div class="company-logo">
+                            <img src="${data.companyLogo}" alt="${data.companyName}" class="company-logo-img">
+                        </div>
+                    ` : ''}
+                    <div class="company-details">
+                        <h2>${data.companyName}</h2>
+                        <p>${data.companyAddress}</p>
+                        <p>${data.companyEmail}</p>
+                        ${data.companyPhone ? `<p>${data.companyPhone}</p>` : ''}
+                    </div>
+                </div>
+                
+                <div class="client-payment-section">
+                    <div class="client-info">
+                        <h3>Received From:</h3>
+                        <p><strong>${data.clientName}</strong></p>
+                        <p>${data.clientAddress}</p>
+                        ${data.clientEmail ? `<p>${data.clientEmail}</p>` : ''}
+                    </div>
+                    
+                    <div class="payment-info">
+                        <h3>Payment Details:</h3>
+                        <p><strong>Payment Method:</strong> ${getPaymentMethodDisplay(data.paymentMethod)}</p>
+                        <p><strong>Payment Date:</strong> ${formatDate(receiptDate)}</p>
+                        <p><strong>Status:</strong> <span class="paid-status">PAID</span></p>
+                    </div>
+                </div>
             </div>
-            <div class="party-info">
-                <h3>Payment Details:</h3>
-                <p><strong>Payment Method:</strong> ${getPaymentMethodDisplay(data.paymentMethod)}</p>
-                <p><strong>Payment Date:</strong> ${formatDate(receiptDate)}</p>
-                <p><strong>Status:</strong> <span class="paid-status">PAID</span></p>
+            
+            <!-- Receipt Items Table -->
+            <div class="receipt-items">
+                <table class="receipt-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-right">Unit Price</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map(item => `
+                            <tr>
+                                <td>${item.description}</td>
+                                <td class="text-center">${item.quantity}</td>
+                                <td class="text-right">ZMW ${item.price.toFixed(2)}</td>
+                                <td class="text-right">ZMW ${item.total.toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
-        </div>
-        
-        <table class="receipt-table">
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th class="text-right">Quantity</th>
-                    <th class="text-right">Unit Price</th>
-                    <th class="text-right">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${data.items.map(item => `
-                    <tr>
-                        <td>${item.description}</td>
-                        <td class="text-right">${item.quantity}</td>
-                        <td class="text-right">ZMW ${item.price.toFixed(2)}</td>
-                        <td class="text-right">ZMW ${item.total.toFixed(2)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        
-        <div class="receipt-summary">
-            <table class="summary-table">
-                <tr>
-                    <td><strong>Subtotal:</strong></td>
-                    <td class="text-right">ZMW ${subtotal.toFixed(2)}</td>
-                </tr>
-                <tr>
-                    <td><strong>Tax:</strong></td>
-                    <td class="text-right">ZMW ${tax.toFixed(2)}</td>
-                </tr>
-                <tr class="total-row">
-                    <td><strong>Total Paid:</strong></td>
-                    <td class="text-right">ZMW ${total.toFixed(2)}</td>
-                </tr>
-            </table>
-        </div>
-        
-        <div class="receipt-footer">
-            <div class="receipt-notes">
-                <h4>Payment Confirmation</h4>
-                <p>This receipt confirms that the above payment has been received in full via ${getPaymentMethodDisplay(data.paymentMethod)}.</p>
-                <p>Thank you for your business!</p>
+            
+            <!-- Summary Section -->
+            <div class="receipt-summary-section">
+                <div class="receipt-notes">
+                    <div class="receipt-notes">
+                        <h3>Payment Confirmation</h3>
+                        <p>This receipt confirms that the above payment has been received in full via ${getPaymentMethodDisplay(data.paymentMethod)}.</p>
+                        <p>Thank you for your business!</p>
+                    </div>
+                </div>
+                
+                <div class="receipt-summary">
+                    <table class="summary-table">
+                        <tr>
+                            <td><strong>Subtotal:</strong></td>
+                            <td class="text-right">ZMW ${subtotal.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tax:</strong></td>
+                            <td class="text-right">ZMW ${tax.toFixed(2)}</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Paid:</strong></td>
+                            <td class="text-right"><strong>ZMW ${total.toFixed(2)}</strong></td>
+                        </tr>
+                    </table>
+                </div>
             </div>
             
             ${data.signature ? `
