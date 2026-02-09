@@ -974,7 +974,7 @@ function generateReceiptHTML(data) {
     const tax = subtotal * 0; // 0% tax by default
     const total = subtotal + tax;
     
-    // Generate receipt number
+    // Generate receipt number and date
     const receiptNumber = `RCP-${data.invoiceNumber.replace('INV-', '')}`;
     const receiptDate = new Date().toISOString().split('T')[0];
     
@@ -990,111 +990,131 @@ function generateReceiptHTML(data) {
         return methods[method] || 'Cash/Credit Card/Bank Transfer';
     };
     
+    // Format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-ZA', {
+            style: 'currency',
+            currency: 'ZMW',
+            minimumFractionDigits: 2
+        }).format(amount).replace('ZMW', 'ZMW ');
+    };
+    
     return `
-        <div class="receipt-container">
-            <!-- Receipt Header -->
-            <div class="receipt-header">
-                <div class="receipt-title">
-                    <h1>PAYMENT RECEIPT</h1>
-                </div>
-                <div class="receipt-meta">
-                    <p><strong>Receipt Number:</strong> ${receiptNumber}</p>
-                    <p><strong>Receipt Date:</strong> ${formatDate(receiptDate)}</p>
-                    <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
-                </div>
-            </div>
-            
-            <!-- Company and Client Information -->
-            <div class="receipt-parties">
-                <div class="company-section">
+        <div class="modern-receipt">
+            <!-- Header with Logo and Title -->
+            <header class="receipt-header">
+                <div class="header-content">
                     ${data.companyLogo ? `
                         <div class="company-logo">
-                            <img src="${data.companyLogo}" alt="${data.companyName}" class="company-logo-img">
+                            <img src="${data.companyLogo}" alt="${data.companyName}" class="logo">
                         </div>
                     ` : ''}
-                    <div class="company-details">
-                        <h2>${data.companyName}</h2>
-                        <p>${data.companyAddress}</p>
-                        <p>${data.companyEmail}</p>
-                        ${data.companyPhone ? `<p>${data.companyPhone}</p>` : ''}
+                    <div class="receipt-title">
+                        <h1>PAYMENT RECEIPT</h1>
+                        <div class="receipt-number">#${receiptNumber}</div>
                     </div>
+                </div>
+                <div class="receipt-date">
+                    <div class="date-label">Date Issued</div>
+                    <div class="date-value">${formatDate(receiptDate)}</div>
+                </div>
+            </header>
+
+            <!-- Company and Client Info -->
+            <div class="receipt-parties">
+                <div class="company-info">
+                    <h3>${data.companyName}</h3>
+                    <p>${data.companyAddress}</p>
+                    ${data.companyEmail ? `<p>${data.companyEmail}</p>` : ''}
+                    ${data.companyPhone ? `<p>${data.companyPhone}</p>` : ''}
                 </div>
                 
-                <div class="client-payment-section">
-                    <div class="client-info">
-                        <h3>Received From:</h3>
-                        <p><strong>${data.clientName}</strong></p>
-                        <p>${data.clientAddress}</p>
-                        ${data.clientEmail ? `<p>${data.clientEmail}</p>` : ''}
-                    </div>
-                    
-                    <div class="payment-info">
-                        <h3>Payment Details:</h3>
-                        <p><strong>Payment Method:</strong> ${getPaymentMethodDisplay(data.paymentMethod)}</p>
-                        <p><strong>Payment Date:</strong> ${formatDate(receiptDate)}</p>
-                        <p><strong>Status:</strong> <span class="paid-status">PAID</span></p>
-                    </div>
+                <div class="divider"></div>
+                
+                <div class="client-info">
+                    <h3>Bill To</h3>
+                    <p><strong>${data.clientName}</strong></p>
+                    <p>${data.clientAddress}</p>
+                    ${data.clientEmail ? `<p>${data.clientEmail}</p>` : ''}
                 </div>
             </div>
-            
-            <!-- Receipt Items Table -->
-            <div class="receipt-items">
-                <table class="receipt-table">
+
+            <!-- Payment Status -->
+            <div class="payment-status">
+                <div class="status-badge">
+                    <i class="fas fa-check-circle"></i> Payment Received
+                </div>
+                <div class="payment-method">
+                    <span>Payment Method:</span>
+                    <strong>${getPaymentMethodDisplay(data.paymentMethod)}</strong>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="items-table">
+                <table>
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th class="text-center">Quantity</th>
-                            <th class="text-right">Unit Price</th>
-                            <th class="text-right">Total</th>
+                            <th class="item-desc">Description</th>
+                            <th class="item-qty">Qty</th>
+                            <th class="item-price">Unit Price</th>
+                            <th class="item-total">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${data.items.map(item => `
                             <tr>
-                                <td>${item.description}</td>
-                                <td class="text-center">${item.quantity}</td>
-                                <td class="text-right">ZMW ${item.price.toFixed(2)}</td>
-                                <td class="text-right">ZMW ${item.total.toFixed(2)}</td>
+                                <td class="item-desc">${item.description}</td>
+                                <td class="item-qty">${item.quantity}</td>
+                                <td class="item-price">${formatCurrency(item.price)}</td>
+                                <td class="item-total">${formatCurrency(item.total)}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Summary Section -->
-            <div class="receipt-summary-section">
-                <div class="receipt-notes">
-                    <div class="receipt-notes">
-                        <h3>Payment Confirmation</h3>
-                        <p>This receipt confirms that the above payment has been received in full via ${getPaymentMethodDisplay(data.paymentMethod)}.</p>
-                        <p>Thank you for your business!</p>
+            <div class="summary-section">
+                <div class="total-amount">
+                    <div class="amount-row">
+                        <span>Subtotal</span>
+                        <span>${formatCurrency(subtotal)}</span>
+                    </div>
+                    ${tax > 0 ? `
+                        <div class="amount-row">
+                            <span>Tax (0%)</span>
+                            <span>${formatCurrency(tax)}</span>
+                        </div>
+                    ` : ''}
+                    <div class="amount-row total">
+                        <span>Total Amount</span>
+                        <span>${formatCurrency(total)}</span>
                     </div>
                 </div>
-                
-                <div class="receipt-summary">
-                    <table class="summary-table">
-                        <tr>
-                            <td><strong>Subtotal:</strong></td>
-                            <td class="text-right">ZMW ${subtotal.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Tax:</strong></td>
-                            <td class="text-right">ZMW ${tax.toFixed(2)}</td>
-                        </tr>
-                        <tr class="total-row">
-                            <td><strong>Total Paid:</strong></td>
-                            <td class="text-right"><strong>ZMW ${total.toFixed(2)}</strong></td>
-                        </tr>
-                    </table>
+
+                <div class="payment-notes">
+                    <h4>Payment Confirmation</h4>
+                    <p>This receipt confirms that the payment of ${formatCurrency(total)} has been successfully processed via ${getPaymentMethodDisplay(data.paymentMethod)} on ${formatDate(receiptDate)}.</p>
+                    <p>Thank you for your business!</p>
+                    
+                    ${data.signature ? `
+                        <div class="signature-section">
+                            <div class="signature-line"></div>
+                            <div class="signature-label">Authorized Signature</div>
+                            <img src="${data.signature}" alt="Signature" class="signature-display">
+                        </div>
+                    ` : ''}
                 </div>
             </div>
-            
-            ${data.signature ? `
-                <div class="receipt-signature">
-                    <h4>Authorized Signature</h4>
-                    <img src="${data.signature}" alt="Signature" class="signature-display">
-                </div>
-            ` : ''}
+
+            <!-- Footer -->
+            <footer class="receipt-footer">
+                <p>This is an official receipt from ${data.companyName}. Please keep this for your records.</p>
+                <p class="contact-info">
+                    For any inquiries, please contact ${data.companyEmail || 'us'}.
+                </p>
+            </footer>
         </div>
     `;
 }
@@ -1106,6 +1126,15 @@ function printReceipt() {
         return;
     }
     window.print();
+}
+
+// Helper function to format currency
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-ZA', {
+        style: 'currency',
+        currency: 'ZMW',
+        minimumFractionDigits: 2
+    }).format(amount).replace('ZMW', 'ZMW ');
 }
 
 async function downloadReceipt() {
@@ -1124,15 +1153,142 @@ async function downloadReceipt() {
         
         // Get the receipt content element
         const element = document.getElementById('receiptContent');
+        const itemsTable = element.querySelector('.items-table');
+        let originalHTML = '';
         
-        // Create canvas from the receipt content
+        // Store original HTML and replace with list format if items table exists
+        if (itemsTable) {
+            originalHTML = itemsTable.outerHTML;
+            
+            // Extract items data from the table
+            const items = [];
+            const rows = itemsTable.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 4) { // Ensure we have all required cells
+                    // Get the unit price from the "Unit Price" column (index 2)
+                    let unitPriceText = cells[2].textContent.trim();
+                    
+                    // Clean and parse the unit price
+                    unitPriceText = unitPriceText
+                        .replace('ZMW', '')  // Remove currency symbol
+                        .replace(/\s/g, '')  // Remove all spaces
+                        .replace(/,/g, '.');  // Convert all commas to dots
+                    
+                    // Parse the unit price as a float
+                    const unitPrice = parseFloat(unitPriceText) || 0;
+                    
+                    // Debug log to verify the parsed values
+                    console.log('Unit Price Text:', cells[2].textContent.trim(), 'Parsed:', unitPrice);
+                    
+                    // Get the quantity from the "Qty" column (index 1)
+                    const quantityText = cells[1].textContent.trim();
+                    const quantity = parseFloat(quantityText) || 0;
+                    
+                    // Debug log to verify the parsed quantity
+                    console.log('Quantity:', quantityText, 'Parsed:', quantity);
+                    
+                    // Debug log the calculation
+                    console.log(`Calculation: ${quantity} x ${unitPrice} = ${quantity * unitPrice}`);
+                    
+                    // Calculate the total based on unit price and quantity
+                    const total = unitPrice * quantity;
+                    
+                    items.push({
+                        description: cells[0].textContent.trim(),
+                        quantity: quantity,
+                        price: unitPrice,
+                        total: total
+                    });
+                }
+            });
+            
+            // Calculate subtotal from all items
+            const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+            
+            // Create items list container
+            const itemsList = document.createElement('div');
+            itemsList.className = 'items-list';
+            itemsList.style.margin = '20px 0';
+            itemsList.style.padding = '0';
+            itemsList.style.listStyle = 'none';
+            
+            // Update the subtotal and total in the receipt
+            const subtotalEl = element.querySelector('.summary-table tr:first-child td:last-child');
+            const totalEl = element.querySelector('.summary-table tr:last-child td:last-child');
+            
+            if (subtotalEl) {
+                subtotalEl.textContent = `ZMW ${subtotal.toFixed(2).replace(/\./g, ',')}`;
+            }
+            if (totalEl) {
+                totalEl.textContent = `ZMW ${subtotal.toFixed(2).replace(/\./g, ',')}`;
+            }
+            
+            // Add items to the list
+            items.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.style.display = 'flex';
+                itemEl.style.justifyContent = 'space-between';
+                itemEl.style.marginBottom = '8px';
+                itemEl.style.paddingBottom = '8px';
+                itemEl.style.borderBottom = '1px solid #eee';
+                
+                itemEl.innerHTML = `
+                    <div style="flex: 2;">${item.description}</div>
+                    <div style="flex: 1; text-align: right; padding-left: 10px;">
+                        ${item.quantity} x ${formatCurrency(item.price)} = <strong>${formatCurrency(item.total)}</strong>
+                    </div>
+                `;
+                
+                itemsList.appendChild(itemEl);
+            });
+            
+            // Replace the table with the list
+            itemsTable.parentNode.replaceChild(itemsList, itemsTable);
+        }
+        
+        // Temporarily adjust the element's style for capture
+        const originalStyle = {
+            height: element.style.height,
+            overflow: element.style.overflow,
+            position: element.style.position
+        };
+        
+        // Make sure the element is visible and can expand
+        element.style.height = 'auto';
+        element.style.overflow = 'visible';
+        element.style.position = 'relative';
+        
+        // Force a reflow to ensure styles are applied
+        element.offsetHeight;
+        
         const canvas = await html2canvas(element, {
             scale: 2, // Higher scale for better quality
             useCORS: true,
             allowTaint: true,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: document.documentElement.scrollWidth,
+            windowHeight: document.documentElement.scrollHeight,
+            width: element.scrollWidth,
+            height: element.scrollHeight,
             backgroundColor: '#ffffff',
             logging: false
         });
+        
+        // Restore the original table
+        if (originalHTML) {
+            const itemsList = element.querySelector('.items-list');
+            if (itemsList) {
+                itemsList.outerHTML = originalHTML;
+            }
+        }
+        
+        // Restore original styles
+        element.style.height = originalStyle.height;
+        element.style.overflow = originalStyle.overflow;
+        element.style.position = originalStyle.position;
         
         // Get canvas dimensions
         const imgData = canvas.toDataURL('image/png');
@@ -1165,6 +1321,11 @@ async function downloadReceipt() {
         // Save the PDF
         pdf.save(`${receiptNumber}.pdf`);
         
+        // Restore original styles
+        element.style.height = originalStyle.height;
+        element.style.overflow = originalStyle.overflow;
+        element.style.position = originalStyle.position;
+        
         // Restore button
         downloadBtn.textContent = originalText;
         downloadBtn.disabled = false;
@@ -1172,6 +1333,14 @@ async function downloadReceipt() {
     } catch (error) {
         console.error('Error generating receipt PDF:', error);
         alert('Error generating PDF. Please try again or use the print function.');
+        
+        // Restore original table in case of error
+        if (originalHTML) {
+            const itemsList = document.querySelector('.items-list');
+            if (itemsList) {
+                itemsList.outerHTML = originalHTML;
+            }
+        }
         
         // Restore button
         const downloadBtn = event.target;
@@ -1259,10 +1428,31 @@ async function downloadInvoice() {
         const element = document.getElementById('invoiceContent');
         
         // Create canvas from the invoice content
+        // Temporarily adjust the element's style for capture
+        const originalStyle = {
+            height: element.style.height,
+            overflow: element.style.overflow,
+            position: element.style.position
+        };
+        
+        // Make sure the element is visible and can expand
+        element.style.height = 'auto';
+        element.style.overflow = 'visible';
+        element.style.position = 'relative';
+        
+        // Force a reflow to ensure styles are applied
+        element.offsetHeight;
+        
         const canvas = await html2canvas(element, {
             scale: 2, // Higher scale for better quality
             useCORS: true,
             allowTaint: true,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: document.documentElement.scrollWidth,
+            windowHeight: document.documentElement.scrollHeight,
+            width: element.scrollWidth,
+            height: element.scrollHeight,
             backgroundColor: '#ffffff',
             logging: false
         });
@@ -1297,6 +1487,11 @@ async function downloadInvoice() {
         
         // Save the PDF
         pdf.save(`${invoiceNumber}.pdf`);
+        
+        // Restore original styles
+        element.style.height = originalStyle.height;
+        element.style.overflow = originalStyle.overflow;
+        element.style.position = originalStyle.position;
         
         // Restore button
         downloadBtn.textContent = originalText;
